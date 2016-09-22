@@ -257,6 +257,9 @@
 (add-hook 'find-file-hook 'simple-tabbar-mode)
 ;; (add-hook 'kill-buffer-hook 'simple-tabbar-kill-buffer-hook)
 
+(add-hook 'window-configuration-change-hook
+  '(lambda () (setq simple-tabbar-scroll nil)))
+
 (define-key simple-tabbar-mode-map (kbd "<header-line> <mouse-4>")
   'simple-tabbar-prev)
 
