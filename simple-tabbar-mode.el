@@ -2,7 +2,7 @@
 
 ;; Author: andrew hills
 ;; URL:         https://github.com/andrewhills/emacs
-;; Version:     1.0
+;; Version:     1.01
 
 ;;; Commentary:
 ;; - goto buffer by left clicking the tab
@@ -18,63 +18,55 @@
 (defgroup simple-tabbar-mode nil
   "desc" :version "1.0" :group 'convenience)
 
+;;;;;;;;;;;;;;;;;;
+
 (make-variable-buffer-local 'simple-tabbar-scroll)
 
-(defface simple-tabbar-mode-default
-  '((((type tty)) :foreground "white" :background "black")
-    (t :foreground "black" :background "grey80" ))
-  "" :group 'simple-tabbar)
+(defface simple-tabbar-face-default
+  '((((type tty)) :background "black" :foreground "white")
+    (t :background "grey80" :foreground "black")) "" :group 'simple-tabbar)
 
-(defface simple-tabbar-mode-selected
-  '((((type tty)) :inherit simple-tabbar-mode-default :foreground "yellow")
-    (t :inherit simple-tabbar-mode-default :foreground "black"
-       :background "white"))
-  "" :group 'simple-tabbar)
+(defface simple-tabbar-face-selected
+  '((((type tty)) :background "black" :foreground "yellow")
+    (t :background "white" :foreground "black")) "" :group 'simple-tabbar)
 
-(defface simple-tabbar-mode-disabled
-  '((((type tty)) :inherit simple-tabbar-mode-default :foreground "blue")
-    (t :inherit simple-tabbar-mode-default :foreground "grey60"))
-  "" :group 'simple-tabbar)
+(defface simple-tabbar-face-disabled
+  '((((type tty)) :background "black" :foreground "blue")
+    (t :background "grey80" :foreground "grey60")) "" :group 'simple-tabbar)
 
-(defface simple-tabbar-mode-separator
-  '((t (:height 0.1 )))
-  "" :group 'simple-tabbar)
+(defface simple-tabbar-face-other
+  '((((type tty)) :background "black" :foreground "white")
+    (t :background "grey50" :foreground "black")) "" :group 'simple-tabbar)
 
-(defun simple-tabbar-buffer-compare (a b)
-  (let ((a-file-name (buffer-file-name a))
-        (b-file-name (buffer-file-name b)))
-    (and a-file-name b-file-name
-         (string< (downcase a-file-name)
-                  (downcase b-file-name)))))
+(defface simple-tabbar-face-separator
+  '((t (:height 0.1))) "" :group 'simple-tabbar)
 
-(defun simple-tabbar-buffer-filter (x)
-  (and (buffer-file-name x) x))
+(defvar simple-tabbar-mode-map
+  (let ((km (make-sparse-keymap)))
+    (define-key km [header-line down-mouse-1] 'simple-tabbar-mode-click)
+    (define-key km [header-line down-mouse-3] 'simple-tabbar-mode-click)
+    (define-key km [header-line mouse-3] 'ignore)
+    km))
 
-(defun simple-tabbar-list-buffers ()
-  (sort (delq nil (mapcar 'simple-tabbar-buffer-filter (buffer-list)))
-        'simple-tabbar-buffer-compare))
+(defvar simple-tabbar-scroll-left-prop
+  (propertize " < " 'face 'simple-tabbar-face-default
+              'local-map simple-tabbar-mode-map 'buf 'prev))
 
-(defun simple-tabbar-prev ()
-  (interactive)
-  (setq simple-tabbar-scroll nil)
-  (let ((bufs (simple-tabbar-list-buffers))
-        (curbuf (current-buffer)))
-    (while bufs
-      (when (and (cdr bufs) (eq curbuf (cadr bufs)))
-        (switch-to-buffer (car bufs))
-        (setq bufs nil))
-      (setq bufs (cdr bufs)))))
+(defvar simple-tabbar-scroll-left-disabled-prop
+  (propertize " < " 'face 'simple-tabbar-face-disabled
+              'local-map simple-tabbar-mode-map 'buf nil))
 
-(defun simple-tabbar-next ()
-  (interactive)
-  (setq simple-tabbar-scroll nil)
-  (let ((bufs (simple-tabbar-list-buffers))
-        (curbuf (current-buffer)))
-    (while bufs
-      (when (and (cdr bufs) (eq curbuf (car bufs)))
-        (switch-to-buffer (cadr bufs))
-        (setq bufs nil))
-      (setq bufs (cdr bufs)))))
+(defvar simple-tabbar-scroll-right-prop
+  (propertize " > " 'face 'simple-tabbar-face-default
+              'local-map simple-tabbar-mode-map 'buf 'next))
+
+(defvar simple-tabbar-scroll-right-disabled-prop
+  (propertize " > " 'face 'simple-tabbar-face-disabled
+              'local-map simple-tabbar-mode-map 'buf nil))
+
+(defvar simple-tabbar-space-prop
+  (propertize " " 'face 'simple-tabbar-face-separator
+              'local-map simple-tabbar-mode-map 'buf nil))
 
 (defun simple-tabbar-mode-click (event)
   (interactive "@e")
@@ -87,70 +79,48 @@
             ((and (eq 'prev buf) (eq 'mouse-1 m))
              (setq simple-tabbar-scroll (- simple-tabbar-scroll 1)))
             ((and (bufferp buf) (eq 'mouse-3 m))
-             (progn
-               (setq simple-tabbar-scroll nil)
-               (kill-buffer buf)))
+             (progn (setq simple-tabbar-scroll nil)
+                    (kill-buffer buf)))
             ((and (bufferp buf) (eq 'mouse-1 m))
-             (progn
-               (setq simple-tabbar-scroll nil)
-               (switch-to-buffer buf)))))))
-
-(defvar simple-tabbar-mode-map
-  (let ((km (make-sparse-keymap)))
-    (define-key km [header-line down-mouse-1] 'simple-tabbar-mode-click)
-    (define-key km [header-line down-mouse-3] 'simple-tabbar-mode-click)
-    (define-key km [header-line mouse-3] 'ignore)
-    km))
+             (if (buffer-file-name buf)
+                 (progn (setq simple-tabbar-scroll nil)
+                        (switch-to-buffer buf))
+               (switch-to-buffer-other-window buf) ))))))
 
 (defun simple-tabbar-tab-name (buf)
-  (concat " " (buffer-name buf)
-          (if (and (buffer-file-name buf)
-                   (buffer-modified-p buf))
-              "*" " ")))
+  (let ((fn (buffer-file-name buf))
+        (name (buffer-name buf)))
+    (concat " " (if fn name (replace-regexp-in-string "\*+" "" name))
+            (if (and fn (buffer-modified-p buf)) "*" " "))))
 
 (defun simple-tabbar-tab-tooltip (buf)
   (let ((fn (buffer-file-name buf)))
-    (if fn fn (buffer-name buf))
-    ))
+    (if fn fn (buffer-name buf)) ))
 
-(defvar simple-tabbar-scroll-left-prop
-  (propertize
-   " < " 'face 'simple-tabbar-mode-default
-   'local-map simple-tabbar-mode-map 'buf 'prev))
+(defun simple-tabbar-buffer-compare (a b)
+  (let ((a-fn (buffer-file-name a))
+        (b-fn (buffer-file-name b)))
+    (cond ((and a-fn b-fn) (string< (downcase a-fn) (downcase b-fn)))
+          (a-fn t)
+          (b-fn nil)
+          (t (string< (downcase (buffer-name a))
+                      (downcase (buffer-name b)))) )))
 
-(defvar simple-tabbar-scroll-left-disabled-prop
-  (propertize
-   " < " 'face 'simple-tabbar-mode-disabled
-   'local-map simple-tabbar-mode-map 'buf nil))
+(defun simple-tabbar-ordered-bufs ()
+  (sort (delq nil (buffer-list)) 'simple-tabbar-buffer-compare))
 
-(defvar simple-tabbar-scroll-right-prop
-  (propertize
-   " > " 'face 'simple-tabbar-mode-default
-   'local-map simple-tabbar-mode-map 'buf 'next))
+(defun simple-tabbar-ordered-bufs-ext ()
+  (let* ((a (buffer-list))
+         (b (mapcar '(lambda (x) (if (buffer-file-name x) x nil)) a)))
 
-(defvar simple-tabbar-scroll-right-disabled-prop
-  (propertize
-   " > " 'face 'simple-tabbar-mode-disabled
-   'local-map simple-tabbar-mode-map 'buf nil))
+    (sort (delq nil b) 'simple-tabbar-buffer-compare)))
 
-(defvar simple-tabbar-space-prop
-  (propertize
-   " " 'face 'simple-tabbar-mode-separator
-   'local-map simple-tabbar-mode-map 'buf nil))
 
-(defvar simple-tabbar-scrolls-width
-  (+ (if (> (string-width  simple-tabbar-scroll-left-prop)
-            (string-width simple-tabbar-scroll-left-disabled-prop))
-         (string-width  simple-tabbar-scroll-left-prop)
-       (string-width simple-tabbar-scroll-left-disabled-prop))
-     (if (> (string-width simple-tabbar-scroll-right-prop)
-            (string-width simple-tabbar-scroll-right-disabled-prop))
-         (string-width simple-tabbar-scroll-right-prop)
-       (string-width simple-tabbar-scroll-right-disabled-prop)) ))
-
-(defun simple-tabbar-mode-tabs ()
-  (let ((width (- (window-total-width) simple-tabbar-scrolls-width))
-        (bufs (simple-tabbar-list-buffers))
+(defun simple-tabbar-tabs ()
+  (let ((width (- (window-total-width)
+                  (string-width simple-tabbar-scroll-left-prop)
+                  (string-width simple-tabbar-scroll-right-prop)))
+        (bufs (simple-tabbar-ordered-bufs))
         (scroll-rightable nil)
         (result nil)
         (pos 0)
@@ -158,15 +128,14 @@
         (curbuf (current-buffer)))
     (while bufs
       (let* ((buf (car bufs))
-             (face (if (eq buf curbuf)
-                       'simple-tabbar-mode-selected
-                     'simple-tabbar-mode-default))
+             (face (cond ((not (buffer-file-name buf)) 'simple-tabbar-face-other)
+                         ((eq buf curbuf) 'simple-tabbar-face-selected)
+                         (t 'simple-tabbar-face-default) ))
              (tab-prop
               (propertize
                (simple-tabbar-tab-name buf) 'face face
                'local-map simple-tabbar-mode-map 'buf buf
-               'help-echo (simple-tabbar-tab-tooltip buf)
-               ))
+               'help-echo (simple-tabbar-tab-tooltip buf) ))
              (prop-width (string-width tab-prop))
              (move (> (+ prop-width pos)
                       (- width (if (display-graphic-p) 1 0))))
@@ -198,9 +167,7 @@
 
         ;;stop when additional tabs will be unseen
         (when (and simple-tabbar-scroll (> scrolls2 simple-tabbar-scroll))
-          (setq bufs nil))
-
-        ))
+          (setq bufs nil)) ))
 
     ;;arrange the results the right way around
     (setq result (nreverse result))
@@ -222,9 +189,22 @@
     ;;
     result))
 
+;;;;;;;;;;;;;;;
+
+;; (defun simple-tabbar-hook ()
+;;   (add-hook 'post-command-hook 'force-mode-line-update nil t)
+;;   (setq header-line-format '(:eval (funcall (quote simple-tabbar-tabs)))))
+
+;; (add-hook 'window-configuration-change-hook
+;;   '(lambda () (setq simple-tabbar-scroll nil)))
+
+;; (add-hook 'find-file-hook 'simple-tabbar-hook)
+
+;;;;;;;;;;;;;;;
+
 (defvar simple-tabbar-mode-header-line-format-old nil)
 
-(defvar simple-tabbar-mode-tabs-function 'simple-tabbar-mode-tabs)
+(defvar simple-tabbar-mode-tabs-function 'simple-tabbar-tabs)
 
 (defconst simple-tabbar-mode-header-line-format
   '(:eval (funcall simple-tabbar-mode-tabs-function)))
@@ -236,12 +216,8 @@
   :group 'simple-tabbar-mode
   (if simple-tabbar-mode
       (progn
-        (when (and (local-variable-p 'header-line-format)
-		   (not (local-variable-p
-                         'simple-tabbar-mode-header-line-format-old)))
-          (set (make-local-variable
-                'simple-tabbar-mode-header-line-format-old)
-               header-line-format))
+        (when (and (local-variable-p 'header-line-format) (not (local-variable-p 'simple-tabbar-mode-header-line-format-old)))
+          (set (make-local-variable 'simple-tabbar-mode-header-line-format-old) header-line-format))
         (setq header-line-format simple-tabbar-mode-header-line-format)
         (add-hook 'post-command-hook 'force-mode-line-update nil t))
     (when (eq header-line-format simple-tabbar-mode-header-line-format)
@@ -251,8 +227,33 @@
         (kill-local-variable 'simple-tabbar-mode-header-line-format-old)))
     (remove-hook 'post-command-hook 'force-mode-line-update t)))
 
-;; (defun simple-tabbar-kill-buffer-hook ()
-;;   (when (buffer-file-name)))
+;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun simple-tabbar-prev ()
+  (interactive)
+  (setq simple-tabbar-scroll nil)
+  (let ((bufs (simple-tabbar-ordered-bufs-ext))
+        (curbuf (current-buffer)))
+    (while bufs
+      (when (and (cdr bufs) (eq curbuf (cadr bufs)))
+        (switch-to-buffer (car bufs))
+        (setq bufs nil))
+      (setq bufs (cdr bufs)))))
+
+(defun simple-tabbar-next ()
+  (interactive)
+  (setq simple-tabbar-scroll nil)
+  (let ((bufs (simple-tabbar-ordered-bufs-ext))
+        (curbuf (current-buffer)))
+    (while bufs
+      (when (and (cdr bufs) (eq curbuf (car bufs)))
+        (switch-to-buffer (cadr bufs))
+        (setq bufs nil))
+      (setq bufs (cdr bufs)))))
+
+;;;;;;;;;;;;;;;;;;;;;
+
 
 (add-hook 'find-file-hook 'simple-tabbar-mode)
 ;; (add-hook 'kill-buffer-hook 'simple-tabbar-kill-buffer-hook)
