@@ -1,8 +1,8 @@
 ;;; simple-tabbar-mode.el --- a simple tabbar mode
 
 ;; Author: andrew hills
-;; URL:         https://github.com/andrewhills/emacs
-;; Version:     1.01
+;; URL:         https://github.com/andrewhills/SimpleTabbarMode
+;; Version:     1.02
 
 ;;; Commentary:
 ;; - goto buffer by left clicking the tab
@@ -111,7 +111,7 @@
 
 (defun simple-tabbar-ordered-bufs-ext ()
   (let* ((a (buffer-list))
-         (b (mapcar '(lambda (x) (if (buffer-file-name x) x nil)) a)))
+         (b (mapcar #'(lambda (x) (if (buffer-file-name x) x nil)) a)))
 
     (sort (delq nil b) 'simple-tabbar-buffer-compare)))
 
@@ -196,7 +196,7 @@
 ;;   (setq header-line-format '(:eval (funcall (quote simple-tabbar-tabs)))))
 
 ;; (add-hook 'window-configuration-change-hook
-;;   '(lambda () (setq simple-tabbar-scroll nil)))
+;;   #'(lambda () (setq simple-tabbar-scroll nil)))
 
 ;; (add-hook 'find-file-hook 'simple-tabbar-hook)
 
@@ -259,7 +259,7 @@
 ;; (add-hook 'kill-buffer-hook 'simple-tabbar-kill-buffer-hook)
 
 (add-hook 'window-configuration-change-hook
-  '(lambda () (setq simple-tabbar-scroll nil)))
+  #'(lambda () (setq simple-tabbar-scroll nil)))
 
 (define-key simple-tabbar-mode-map (kbd "<header-line> <mouse-4>")
   'simple-tabbar-prev)
