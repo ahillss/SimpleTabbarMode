@@ -1,5 +1,6 @@
 
-#####simple-tabbar-mode.el
+# simple-tabbar-mode.el
+
 A simple tabbar mode.
 
 * works in terminal
