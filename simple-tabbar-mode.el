@@ -279,10 +279,10 @@
 (define-key simple-tabbar-mode-map (kbd "C-<right>")
   'simple-tabbar-next)
 
-(define-key simple-tabbar-mode-map (kbd "C-x C-<left>")
-  'simple-tabbar-prev)
+;; (define-key simple-tabbar-mode-map (kbd "C-x C-<left>")
+;;   'simple-tabbar-prev)
 
-(define-key simple-tabbar-mode-map (kbd "C-x C-<right>")
-  'simple-tabbar-next)
+;; (define-key simple-tabbar-mode-map (kbd "C-x C-<right>")
+;;   'simple-tabbar-next)
 
 (provide 'simple-tabbar-mode)
