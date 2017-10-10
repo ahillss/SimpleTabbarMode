@@ -2,7 +2,7 @@
 
 ;; Author: andrew hills
 ;; URL:         https://github.com/andrewhills/SimpleTabbarMode
-;; Version:     1.03
+;; Version:     1.04
 
 ;;; Commentary:
 ;; - goto buffer by left clicking the tab
@@ -41,6 +41,10 @@
 (defface simple-tabbar-face-separator
   '((t (:height 0.1))) "" :group 'simple-tabbar)
 
+(defface simple-tabbar-face-padding
+  '((((type tty)) :background "black")
+    (t :background "grey80")) "" :group 'simple-tabbar)
+
 (defvar simple-tabbar-mode-map
   (let ((km (make-sparse-keymap)))
     (define-key km [header-line down-mouse-1] 'simple-tabbar-mode-click)
@@ -53,20 +57,17 @@
               'local-map simple-tabbar-mode-map 'buf 'prev))
 
 (defvar simple-tabbar-scroll-left-disabled-prop
-  (propertize " < " 'face 'simple-tabbar-face-disabled
-              'local-map simple-tabbar-mode-map 'buf nil))
+  (propertize " < " 'face 'simple-tabbar-face-disabled 'buf nil))
 
 (defvar simple-tabbar-scroll-right-prop
   (propertize " > " 'face 'simple-tabbar-face-default
               'local-map simple-tabbar-mode-map 'buf 'next))
 
 (defvar simple-tabbar-scroll-right-disabled-prop
-  (propertize " > " 'face 'simple-tabbar-face-disabled
-              'local-map simple-tabbar-mode-map 'buf nil))
+  (propertize " > " 'face 'simple-tabbar-face-disabled 'buf nil))
 
 (defvar simple-tabbar-space-prop
-  (propertize " " 'face 'simple-tabbar-face-separator
-              'local-map simple-tabbar-mode-map 'buf nil))
+  (propertize " " 'face 'simple-tabbar-face-separator 'buf nil))
 
 (defun simple-tabbar-mode-click (event)
   (interactive "@e")
@@ -168,6 +169,9 @@
         ;;stop when additional tabs will be unseen
         (when scroll-rightable ;;(and simple-tabbar-scroll (> scrolls2 simple-tabbar-scroll))
           (setq bufs nil)) ))
+
+    ;;add padding to the end
+    (setq result (cons (propertize (make-string (- width pos) ?\s) 'face 'simple-tabbar-face-padding 'buf nil) result))
 
     ;;arrange the results the right way around
     (setq result (nreverse result))
