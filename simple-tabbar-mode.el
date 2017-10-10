@@ -2,7 +2,7 @@
 
 ;; Author: andrew hills
 ;; URL:         https://github.com/andrewhills/SimpleTabbarMode
-;; Version:     1.02
+;; Version:     1.03
 
 ;;; Commentary:
 ;; - goto buffer by left clicking the tab
@@ -120,7 +120,7 @@
   (let ((width (- (window-total-width)
                   (string-width simple-tabbar-scroll-left-prop)
                   (string-width simple-tabbar-scroll-right-prop)))
-        (bufs (simple-tabbar-ordered-bufs))
+        (bufs (if (display-graphic-p) (simple-tabbar-ordered-bufs) (simple-tabbar-ordered-bufs-ext)))
         (scroll-rightable nil)
         (result nil)
         (pos 0)
@@ -166,7 +166,7 @@
                    (< simple-tabbar-scroll scrolls2)))
 
         ;;stop when additional tabs will be unseen
-        (when (and simple-tabbar-scroll (> scrolls2 simple-tabbar-scroll))
+        (when scroll-rightable ;;(and simple-tabbar-scroll (> scrolls2 simple-tabbar-scroll))
           (setq bufs nil)) ))
 
     ;;arrange the results the right way around
