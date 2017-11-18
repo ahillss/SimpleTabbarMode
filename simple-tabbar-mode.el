@@ -10,7 +10,7 @@
 ;; - mouse over tab shows file path
 ;; - clicking mouse prev/next goes though tabs
 ;; - top left prev/next tabs scroll through the off screen tabs
-;; - C-left, C-right, C-x C-left, C-x C-right navigates the tabs
+;; - C-left and C-right navigates the tabs
 
 ;;; Usage
 ;; put (require 'simple-tabbar-mode nil t) in your emacs init file
