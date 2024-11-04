@@ -1,8 +1,8 @@
 ;;; simple-tabbar-mode.el --- a simple tabbar mode
 
-;; Author: andrew hills
-;; URL:         https://github.com/andrewhills/SimpleTabbarMode
-;; Version:     1.04
+;; Author:
+;; URL:
+;; Version:     1.05
 
 ;;; Commentary:
 ;; - goto buffer by left clicking the tab
@@ -24,26 +24,26 @@
 
 (defface simple-tabbar-face-default
   '((((type tty)) :background "black" :foreground "white")
-    (t :background "grey80" :foreground "black")) "" :group 'simple-tabbar)
+    (t :background "grey50" :foreground "grey20")) "" :group 'simple-tabbar)
 
 (defface simple-tabbar-face-selected
   '((((type tty)) :background "black" :foreground "yellow")
-    (t :background "white" :foreground "black")) "" :group 'simple-tabbar)
+    (t :background "grey70" :foreground "grey20" :weight semi-bold)) "" :group 'simple-tabbar)
 
 (defface simple-tabbar-face-disabled
   '((((type tty)) :background "black" :foreground "blue")
-    (t :background "grey80" :foreground "grey60")) "" :group 'simple-tabbar)
+    (t :background "grey50" :foreground "grey60")) "" :group 'simple-tabbar)
 
 (defface simple-tabbar-face-other
   '((((type tty)) :background "black" :foreground "white")
-    (t :background "grey50" :foreground "black")) "" :group 'simple-tabbar)
+    (t :background "grey30" :foreground "grey70")) "" :group 'simple-tabbar)
 
 (defface simple-tabbar-face-separator
   '((t (:height 0.1))) "" :group 'simple-tabbar)
 
 (defface simple-tabbar-face-padding
   '((((type tty)) :background "black")
-    (t :background "grey80")) "" :group 'simple-tabbar)
+    (t :background "grey50")) "" :group 'simple-tabbar)
 
 (defvar simple-tabbar-mode-map
   (let ((km (make-sparse-keymap)))
